@@ -94,8 +94,6 @@ class Alternative extends Model
                 $data = [
                     'student_id'        => $result->student_id,
                     'student_name'      => $result->studentList->name,
-                    'kelas_id'          => $result->kelas->id,
-                    'kelas_name'        => $result->kelas->kelas_name,
                     'criteria_id'       => [$result->criteria->id],
                     'criteria_name'     => [$result->criteria->name],
                     'alternative_val'   => [$result->alternative_value]

@@ -10,16 +10,13 @@ class Student extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nis',
+        'npm',
         'name',
         'gender',
-        'kelas_id',
+        'nomor_hp',
+        'email'
     ];
 
-    public function kelas()
-    {
-        return $this->belongsTo(Kelas::class);
-    }
 
     public function alternatives()
     {

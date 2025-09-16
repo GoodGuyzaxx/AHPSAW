@@ -15,10 +15,11 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kelas_id')->constrained()->cascadeOnDelete();
-            $table->bigInteger('nis')->unique();
+            $table->bigInteger('npm')->unique();
             $table->string('name');
             $table->string('gender');
+            $table->string('nomor_hp');
+            $table->string('email')->unique();
             $table->timestamps();
         });
     }

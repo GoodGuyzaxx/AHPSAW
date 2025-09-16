@@ -20,69 +20,46 @@ class AlternativeController extends Controller
 {
     // pagination
     protected $limit = 10;
-    protected $fields = array('students.*', 'kelas.id as kelasId');
+    protected $fields = array('students.*');
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
+
     public function index(Request $request)
     {
-        // akses get
-        if (auth()->user()->level === 'ADMIN' || auth()->user()->level === 'USER') {
-            $alternatives = Alternative::with('user')->get();
-        }
+        // 1. Ambil ID semua siswa yang sudah menjadi alternatif
+        $usedStudentIds = Alternative::pluck('student_id')->all();
 
-        // get student_id dari alternative
-        $usedIds    = Alternative::select('student_id')->distinct()->get();
-        $usedIdsFix = [];
-
-        foreach ($usedIds as $usedId) {
-            array_push($usedIdsFix, $usedId->student_id);
-        }
-
-        // menampilkan data alternatif
-        $alternatives = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
-            ->whereIn('students.id', $usedIdsFix)
-            ->orderBy('students.kelas_id')
-            ->orderBy('students.name')
-            ->with('alternatives');
-
-        // dd(request('search'));
-        // filter search
-        if (request('search')) {
-            $alternatives = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
-                ->where('students.name', 'LIKE', '%' . request('search') . '%')
-                ->orWhere('kelas.kelas_name', 'LIKE', '%' . request('search') . '%')
-                ->whereIn('students.id', $usedIdsFix)
-                ->with('alternatives');
-        }
-
-        // @dd($alternatives);
-
-        // student list tambah
-        $studentsList = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
-            ->whereNotIn('students.id', $usedIdsFix)
-            ->orderBy('kelas.id')
-            ->orderBy('students.name', 'ASC')
-            ->get(['students.*', 'kelas.id as kelasId'])
-            ->groupBy('kelas.kelas_name');
-
-        // Get value halaman yang dipilih dari dropdown
-        $page = $request->query('page', 1);
-
-        // Tetapkan opsi dropdown halaman yang diinginkan
+        // 2. Opsi untuk dropdown jumlah entri per halaman
         $perPageOptions = [5, 10, 15, 20, 25];
+        $perPage = $request->query('perPage', $perPageOptions[1]); // Default 10 entri
 
-        // Get value halaman yang dipilih menggunaakan the query parameters
-        $perPage = $request->query('perPage', $perPageOptions[1]);
+        // 3. Memulai Query Builder untuk menampilkan data alternatif (yaitu siswa yang terdaftar)
+        $query = Student::whereIn('id', $usedStudentIds)
+            ->with('alternatives') // Eager load relasi alternatives
+            ->orderBy('name', 'ASC'); // Urutkan berdasarkan nama
 
-        // Paginasi hasil dengan halaman dan dropdown yang dipilih
-        $alternatives = $alternatives->paginate($perPage, $this->fields, 'page', $page);
+        // 4. Menerapkan filter pencarian jika ada
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            // Pencarian hanya berdasarkan nama siswa, karena tidak ada lagi join ke kelas
+            $query->where('name', 'like', $searchTerm);
+        }
 
-        // Ambil semua kriteria
+        // 5. Lakukan paginasi pada query yang sudah lengkap
+        $alternatives = $query->paginate($perPage)->withQueryString();
+
+        // 6. Ambil daftar siswa yang BELUM menjadi alternatif (untuk modal tambah)
+        $studentsList = Student::whereNotIn('id', $usedStudentIds)
+            ->orderBy('name', 'ASC')
+            ->get();
+
+        // 7. Ambil semua kriteria untuk ditampilkan di header tabel
         $criterias = Criteria::with('criteriaSubs')->get();
 
+        // 8. Mengirim semua data yang diperlukan ke view
         return view('pages.admin.alternatif.data', [
             'title'           => 'Data Alternatif',
             'alternatives'    => $alternatives,
@@ -92,6 +69,72 @@ class AlternativeController extends Controller
             'perPage'         => $perPage
         ]);
     }
+//    public function index(Request $request)
+//    {
+//        // akses get
+//        if (auth()->user()->level === 'ADMIN' || auth()->user()->level === 'USER') {
+//            $alternatives = Alternative::with('user')->get();
+//        }
+//
+//        // get student_id dari alternative
+//        $usedIds    = Alternative::select('student_id')->distinct()->get();
+//        $usedIdsFix = [];
+//
+//        foreach ($usedIds as $usedId) {
+//            array_push($usedIdsFix, $usedId->student_id);
+//        }
+//
+//        // menampilkan data alternatif
+//        $alternatives = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
+//            ->whereIn('students.id', $usedIdsFix)
+//            ->orderBy('students.kelas_id')
+//            ->orderBy('students.name')
+//            ->with('alternatives');
+//
+//        // dd(request('search'));
+//        // filter search
+//        if (request('search')) {
+//            $alternatives = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
+//                ->where('students.name', 'LIKE', '%' . request('search') . '%')
+//                ->orWhere('kelas.kelas_name', 'LIKE', '%' . request('search') . '%')
+//                ->whereIn('students.id', $usedIdsFix)
+//                ->with('alternatives');
+//        }
+//
+//        // @dd($alternatives);
+//
+//        // student list tambah
+//        $studentsList = Student::join('kelas', 'kelas.id', '=', 'students.kelas_id')
+//            ->whereNotIn('students.id', $usedIdsFix)
+//            ->orderBy('kelas.id')
+//            ->orderBy('students.name', 'ASC')
+//            ->get('students.*')
+//            ->groupBy('kelas.kelas_name');
+//
+//        // Get value halaman yang dipilih dari dropdown
+//        $page = $request->query('page', 1);
+//
+//        // Tetapkan opsi dropdown halaman yang diinginkan
+//        $perPageOptions = [5, 10, 15, 20, 25];
+//
+//        // Get value halaman yang dipilih menggunaakan the query parameters
+//        $perPage = $request->query('perPage', $perPageOptions[1]);
+//
+//        // Paginasi hasil dengan halaman dan dropdown yang dipilih
+//        $alternatives = $alternatives->paginate($perPage, $this->fields, 'page', $page);
+//
+//        // Ambil semua kriteria
+//        $criterias = Criteria::with('criteriaSubs')->get();
+//
+//        return view('pages.admin.alternatif.data', [
+//            'title'           => 'Data Alternatif',
+//            'alternatives'    => $alternatives,
+//            'criterias'       => $criterias,
+//            'student_list'    => $studentsList,
+//            'perPageOptions'  => $perPageOptions,
+//            'perPage'         => $perPage
+//        ]);
+//    }
 
     /**
      * Show the form for creating a new resource.
@@ -112,48 +155,64 @@ class AlternativeController extends Controller
 
     public function store(AlternativeStoreRequest $request)
     {
-        // Validasi input
+        // 1. Ambil data yang sudah divalidasi oleh AlternativeStoreRequest
         $validated = $request->validated();
 
-        // Pisahkan student_id dan kelas_id
-        $pisah = explode(" ", $validated['student_id']);
-        if (count($pisah) !== 2) {
-            return redirect()->back()->withErrors(['student_id' => 'Invalid student ID format'])->withInput();
-        }
-        $studentId = $pisah[0];
-        $kelasId = $pisah[1];
+        // 2. Ambil student_id langsung, karena tidak ada lagi kelas_id yang digabung
+        $studentId = $validated['student_id'];
 
-        // Verifikasi bahwa jumlah criteria_id sama dengan jumlah criteria_subs
+        // 3. [PENTING] Cek apakah mahasiswa ini sudah terdaftar sebagai alternatif
+        if (Alternative::where('student_id', $studentId)->exists()) {
+            return redirect()->back()
+                ->withErrors(['student_id' => 'Mahasiswa ini sudah terdaftar sebagai alternatif. Silakan edit data yang ada.'])
+                ->withInput();
+        }
+
+        // 4. Verifikasi ulang bahwa jumlah kriteria cocok (pengaman tambahan)
         if (count($validated['criteria_id']) !== count($validated['criteria_subs'])) {
-            return redirect()->back()->withErrors(['general' => 'semua kriteria harus di isi'])->withInput();
+            return redirect()->back()->withErrors(['general' => 'Semua kriteria harus diisi dengan lengkap.'])->withInput();
         }
 
+        // 5. Gunakan transaksi database untuk memastikan semua data berhasil disimpan
         DB::beginTransaction();
 
         try {
+            // 6. Loop melalui setiap kriteria yang dikirim dari form
             foreach ($validated['criteria_id'] as $key => $criteriaId) {
-                $criteriaSub = $validated['criteria_subs'][$key];
-                list($criteriaSubId, $alternativeValue) = explode('|', $criteriaSub);
+                // Ambil nilai subkriteria (format: "id|value")
+                $criteriaSubValue = $validated['criteria_subs'][$key];
 
+                // Pisahkan untuk mendapatkan id subkriteria dan nilainya
+                list($criteriaSubId, $alternativeValue) = explode('|', $criteriaSubValue);
+
+                // 7. Siapkan data untuk disimpan, tanpa 'kelas_id'
                 $data = [
-                    'student_id' => $studentId,
+                    'student_id'      => $studentId,
+                    'criteria_id'     => $criteriaId,
                     'criteria_sub_id' => $criteriaSubId,
-                    'criteria_id' => $criteriaId,
-                    'kelas_id' => $kelasId,
                     'alternative_value' => $alternativeValue,
                 ];
 
+                // Buat record baru di tabel Alternative
                 Alternative::create($data);
             }
 
+            // Jika semua berhasil, simpan perubahan secara permanen
             DB::commit();
 
             return redirect('/dashboard/alternatif')
-                ->with('success', 'Alternatif Baru telah ditambahkan!');
+                ->with('success', 'Alternatif baru telah berhasil ditambahkan!');
+
         } catch (\Exception $e) {
+            // Jika terjadi error di tengah jalan, batalkan semua query
             DB::rollBack();
+
+            // (Opsional) Catat error untuk debugging
+            \Log::error('Gagal menyimpan alternatif: ' . $e->getMessage());
+
+            // Kembalikan ke halaman sebelumnya dengan pesan error
             return redirect()->back()
-                ->withErrors(['general' => 'Terjadi kesalahan saat menyimpan data. ' . $e->getMessage()])
+                ->withErrors(['general' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'])
                 ->withInput();
         }
     }

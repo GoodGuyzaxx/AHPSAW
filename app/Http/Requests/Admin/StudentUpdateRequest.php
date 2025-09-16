@@ -24,10 +24,11 @@ class StudentUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'nis' => 'required|max:11|min:3',
+            'npm' => 'required|min:3',
             'name' => 'required|max:60|min:5',
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
-            'kelas_id' => 'required'
+            'nomor_hp' => 'required|min:10',
+            'email' => 'required',
         ];
     }
 }

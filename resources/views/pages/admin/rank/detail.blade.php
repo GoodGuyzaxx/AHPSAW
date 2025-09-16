@@ -1,132 +1,104 @@
 @extends('layouts.admin')
 
 @section('content')
-    {{-- {{ print_r($normalizations) }} --}}
-    <div class="container-fluid px-4">
-        <div class="row align-items-center">
-            <div class="col-sm-6 col-md-8">
-                <h1 class="mt-4">{{ $title }}</h1>
-                <ol class="breadcrumb mb-4">
-                    <li class="breadcrumb-item"><a href="{{ route('rank.index') }}">Final Ranking</a></li>
-                    <li class="breadcrumb-item active">{{ $title }}</li>
-                    @php($crValue = session("cr_value_{$criteriaAnalysis->id}"))
-                    @if ($crValue > 0.1)
-                        <li class="breadcrumb-item" style="color: red;">
-                            Rangking Siswa
-                        </li>
-                    @else
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('rank.final', $criteriaAnalysis->id) }}">
-                                Rangking Siswa
-                            </a>
-                        </li>
-                    @endif
-                    @if ($crValue > 0.1)
-                        <li class="breadcrumb-item" style="color: red;">
-                            Perhitungan SAW
-                        </li>
-                    @else
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('rank.detailr', $criteriaAnalysis->id) }}">
-                                Perhitungan SAW
-                            </a>
-                        </li>
-                    @endif
-                </ol>
+    <main class="container-fluid px-4 animate-fade-in">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ $title }}</h1>
+                <p class="mb-0 text-muted">Tahap normalisasi matriks keputusan.</p>
             </div>
         </div>
 
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                Lakukan perhitungan perbandingan
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('rank.index') }}" class="text-decoration-none">Analisis & Perangkingan</a></li>
+                <li class="breadcrumb-item active fw-semibold">{{ $title }}</li>
+            </ol>
+        </nav>
 
-        {{-- datatable --}}
-        <div class="card mb-4">
-            <div class="card-body table-responsive">
-                <div class="d-sm-flex align-items-center justify-content-between mb-3">
-                    @if ($crValue > 0.1)
-                        <a class="btn btn-success disabled">
-                            <i class="fa-solid fa-ranking-star"></i>
-                            Rangking Siswa
-                        </a>
-                    @else
-                        <a href="{{ route('rank.final', $criteriaAnalysis->id) }}" class="btn btn-success">
-                            <i class="fa-solid fa-ranking-star"></i>
-                            Rangking Siswa
-                        </a>
-                    @endif
-                    {{-- Display CR Value --}}
-                    @if ($crValue > 0.1)
-                        <td class="text-center text-danger" colspan="2">
-                            <a href="{{ route('perbandingan.update', $criteriaAnalysis->id) }}" class="btn btn-danger mt-2">
-                                Nilai Rasio Konsistensi <b>{{ $crValue }}</b> ≥ <b>0.1</b>
-                                <br>
+        <div class="card border-0 shadow-sm animate-fade-in" style="animation-delay: 0.1s">
+            <div class="card-header bg-light border-0 py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-table me-2 text-info"></i>
+                        Matriks Normalisasi (R)
+                    </h5>
+                    <div>
+                        @php($crValue = session("cr_value_{$criteriaAnalysis->id}"))
+                        @if ($crValue > 0.1)
+                            <a href="{{ route('perbandingan.show', $criteriaAnalysis->id) }}" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="Nilai CR tidak konsisten, harap perbaiki.">
+                                <i class="fas fa-exclamation-triangle me-2"></i>CR: {{ $crValue }} (Tidak Konsisten)
                             </a>
-                        </td>
-                    @elseif ($crValue === null)
-                        <p></p>
-                    @else
-                        <p>Nilai Rasio Konsistensi: <b> {{ $crValue }}</b></p>
-                    @endif
+                        @else
+                            <a href="{{ route('rank.final', $criteriaAnalysis->id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-ranking-star me-2"></i>Lanjutkan ke Ranking Akhir
+                            </a>
+                        @endif
+                    </div>
                 </div>
-                <table class="table table-bordered table-condensed table-responsive">
-                    <tbody>
+            </div>
+
+            <div class="card-body p-4">
+                @if (session('error'))
+                    <div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Lakukan perhitungan perbandingan terlebih dahulu.</div>
+                @endif
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Pembagi & Bobot</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        <tbody>
                         <tr>
-                            <td scope="col" class="fw-bold" style="width:11%">Kategori</td>
+                            <th class="table-light w-25">Kategori</th>
                             @foreach ($dividers as $divider)
-                                <td scope="col">{{ $divider['kategori'] }}</td>
+                                <td class="text-center">{{ $divider['kategori'] }}</td>
                             @endforeach
                         </tr>
                         <tr>
-                            <td scope="col" class="fw-bold" style="width:11%">Nilai pembagi</td>
+                            <th class="table-light">Nilai Pembagi (Max/Min)</th>
                             @foreach ($dividers as $divider)
-                                <td scope="col">{{ $divider['divider_value'] }}</td>
+                                <td class="text-center">{{ $divider['divider_value'] }}</td>
                             @endforeach
                         </tr>
-                    </tbody>
-                </table>
-                <table id="datatablesSimple" class="table table-bordered table-responsive">
-                    <thead class="table-primary align-middle text-center">
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Tabel Normalisasi Alternatif</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light align-middle text-center">
                         <tr>
-                            <th scope="col" class="text-center">No</th>
-                            <th scope="col" class="text-center">Nama alternatif</th>
-                            <th scope="col" class="text-center">Kelas</th>
+                            <th>No</th>
+                            <th>Nama Alternatif</th>
                             @foreach ($dividers as $divider)
-                                <th scope="col">{{ $divider['name'] }}</th>
+                                <th>{{ $divider['name'] }}</th>
                             @endforeach
                         </tr>
-                    </thead>
-                    <tbody class="align-middle">
+                        </thead>
+                        <tbody class="align-middle text-center">
                         @if (!empty($normalizations))
                             @foreach ($normalizations as $normalisasi)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td class="text-center">
-                                        {{ Str::ucfirst(Str::Upper($normalisasi['student_name'])) }}
-                                    </td>
-                                    <td class="text-center">
-                                        {{ $normalisasi['kelas_name'] }}
-                                    </td>
+                                    <th class="table-light text-start">{{ Str::ucfirst(Str::lower($normalisasi['student_name'])) }}</th>
                                     @foreach ($dividers as $key => $value)
-                                        @if (isset($normalisasi['results'][$key]))
-                                            <td class="text-center">
-                                                {{ round($normalisasi['results'][$key], 2) }}
-                                            </td>
-                                        @else
-                                            <td class="text-center">
-                                                Empty
-                                            </td>
-                                        @endif
+                                        <td>
+                                            @if (isset($normalisasi['results'][$key]))
+                                                {{ round($normalisasi['results'][$key], 3) }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                     @endforeach
                                 </tr>
                             @endforeach
                         @endif
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+    @include('partials.style-script')
 @endsection

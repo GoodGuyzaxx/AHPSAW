@@ -15,28 +15,23 @@
 
 </head>
 
-<body class="sb-nav-fixed">
+<body class="bg-light">
 
-    {{-- navbar --}}
-    @include('includes.admin.navbar')
+{{-- Modern navbar --}}
+@include('includes.admin.navbar')
 
+{{-- Main content container --}}
+<div class="main-wrapper">
+    {{-- content --}}
+    <main class="main-content">
+        @yield('content')
+    </main>
 
-    <div id="layoutSidenav">
+    {{-- footer --}}
+    @include('includes.admin.footer')
+</div>
 
-        {{-- sidenav --}}
-        @include('includes.admin.sidenav')
-
-        {{-- content --}}
-        <div id="layoutSidenav_content">
-            {{-- content --}}
-            @yield('content')
-
-            {{-- footer --}}
-            @include('includes.admin.footer')
-        </div>
-    </div>
-
-    @include('includes.admin.script')
+@include('includes.admin.script')
 
 </body>
 

@@ -1,321 +1,235 @@
 @extends('layouts.admin')
 
 @section('content')
-{{-- {{ print_r($criteria_analysis->details) }} --}}
-<div class="container-fluid px-4">
-    <div class="row align-items-center">
-        <div class="col-sm-6 col-md-8">
-            <h1 class="mt-4">{{ $title }}</h1>
-            <ol class="breadcrumb mb-4">
-                <li class="breadcrumb-item"><a href="{{ route('perbandingan.update', $criteria_analysis->id) }}">Input
-                        Perbandingan Kriteria</a>
-                </li>
-                <li class="breadcrumb-item"><a href="{{ route('perbandingan.result', $criteria_analysis->id) }}">Hasil
-                        Perbandingan</a>
-                </li>
-                <li class="breadcrumb-item active">{{ $title }}</li>
-            </ol>
+    <main class="container-fluid px-4 animate-fade-in">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ $title }}</h1>
+                <p class="mb-0 text-muted">Detail langkah-langkah perhitungan metode AHP.</p>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive col-lg-12">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('perbandingan.index') }}" class="text-decoration-none">Perbandingan Kriteria</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('perbandingan.show', $criteria_analysis->id) }}">Input Perbandingan</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('perbandingan.result', $criteria_analysis->id) }}">Hasil Perbandingan</a></li>
+                <li class="breadcrumb-item active fw-semibold">{{ $title }}</li>
+            </ol>
+        </nav>
 
-                {{-- matrik penjumlahan(prespektif nilai) --}}
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Matriks penjumlahan kolom kriteria beasiswa</h4>
-                </div>
-                <table class="table table-bordered">
-                    <thead class="table-primary align-middle text-center">
+        <div class="card border-0 shadow-sm animate-fade-in" style="animation-delay: 0.1s">
+            <div class="card-header bg-light border-0 py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-calculator me-2 text-info"></i>
+                    Detail Perhitungan AHP
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Matriks Penjumlahan Kolom Kriteria</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        {{-- Konten tabel ini sudah benar --}}
+                        <thead class="table-light align-middle text-center">
                         <tr>
-                            <th scope="col">Kriteria</th>
+                            <th>Kriteria</th>
                             @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                            <th scope="col">
-                                {{ $priorityValue->criteria->name }}
-                            </th>
+                                <th>{{ $priorityValue->criteria->name }}</th>
                             @endforeach
                         </tr>
-                    </thead>
-
-                    <tbody class="align-middle">
+                        </thead>
+                        <tbody class="align-middle text-center">
                         @php($startAt = 0)
                         @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                        @php($bgYellow = 'bg-warning text-dark')
-                        <tr>
-                            <th scope="row" class="text-center table-primary">
-                                {{ $priorityValue->criteria->name }}
-                            </th>
-                            @foreach ($criteria_analysis->priorityValues as $priorityvalue)
-                            @if (
-                            $criteria_analysis->details[$startAt]->criteria_id_first ===
-                            $criteria_analysis->details[$startAt]->criteria_id_second)
-                            @php($bgYellow = '')
-                            <td class="text-center bg-success text-white ">
-                                {{ floatval($criteria_analysis->details[$startAt]->comparison_result) }}
-                            </td>
-                            @else
-                            <td class="text-center {{ $bgYellow }}">
-                                {{-- perhitungan --}}
-                                @if ($bgYellow)
-                                {{ 1 }}/
-                                {{ round(floatval($criteria_analysis->details[$startAt]->comparison_value), 2) }}
-                                =
-                                @endif
-                                {{-- hasil --}}
-                                {{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 2) }}
-                            </td>
-                            @endif
-                            @php($startAt++)
-                            @endforeach
-                        </tr>
-                        @endforeach
-                        <th class="text-center table-dark">Jumlah</th>
-                        @foreach ($totalSums as $total)
-                        <td class="text-center bg-dark text-white">
-                            {{ round($total['totalSum'], 2) }}
-                        </td>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                {{-- Normalisasi dan Prioritas --}}
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Matriks normalisasi kriteria dan nilai prioritas</h4>
-                </div>
-
-                <table class="table table-bordered">
-                    <thead class="table-primary align-middle text-center">
-                        <tr>
-                            <th scope="col">Kriteria</th>
-                            @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                            <th scope="col">
-                                {{ $priorityValue->criteria->name }}
-                            </th>
-                            @endforeach
-                            <th scope="col" class="text-center table-primary">Jumlah</th>
-                            <th scope="col" class="text-center table-dark text-white">Nilai Prioritas</th>
-                        </tr>
-                    </thead>
-                    <tbody class="align-middle">
-                        @php($startAt = 0)
-                        @php($rowTotals = [])
-                        @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                        @php($rowTotal = 0)
-                        @php($bgYellow = 'bg-warning text-dark')
-                        <tr>
-                            <th scope="row" class="table-primary text-center">
-                                {{ $priorityValue->criteria->name }}
-                            </th>
-                            @foreach ($criteria_analysis->priorityValues as $key => $priorityvalue)
-                            <td class="text-center">
-                                @php($res = floatval($criteria_analysis->details[$startAt]->comparison_result) / $totalSums[$key]['totalSum'])
-                                {{-- normalisasi --}}
-                                {{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 2) }}
-                                / {{ round($totalSums[$key]['totalSum'], 2) }} =
-                                {{ round($res, 3) }}
-                                {{-- row total --}}
-                                @php($rowTotal += Str::substr($res, 0, 11))
-                            </td>
-                            @php($startAt++)
-                            @endforeach
-                            {{-- jumlah baris --}}
-                            @php(array_push($rowTotals, $rowTotal))
-                            <td class="text-center">
-                                {{ round($rowTotal, 3) }}
-                            </td>
-                            <td class="text-center table-dark text-white">
-                                {{-- nilai Prioritas --}}
-                                {{ round($rowTotal, 2) }} /
-                                {{ $criteria_analysis->priorityValues->count() }} =
-                                {{ round($priorityValue->value, 3) }}
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                {{-- perkalian elemen dengan bobot prioritas --}}
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Matriks perkalian setiap elemen dengan nilai prioritas</h4>
-                </div>
-
-                <table class="table table-bordered">
-                    <thead class="table-primary align-middle text-center">
-                        <tr>
-                            <th scope="col">Kriteria</th>
-                            @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                            <th scope="col">{{ $priorityValue->criteria->name }}</th>
-                            @endforeach
-                            <th scope="col" class="table-dark text-white">Jumlah Baris</th>
-                        </tr>
-                    </thead>
-                    <tbody class="align-middle">
-                        @php($startAt = 0)
-                        @php($rowTotals = [])
-                        @foreach ($criteria_analysis->priorityValues as $priorityValue)
-                        @php($rowTotal = 0)
-                        <tr>
-                            <th scope="row" class="table-primary text-center">
-                                {{ $priorityValue->criteria->name }}
-                            </th>
-                            @foreach ($criteria_analysis->priorityValues as $key => $innerpriorityvalue)
-                            <td class="text-center">
-                                @php($res = floatval($criteria_analysis->details[$startAt]->comparison_result) * $innerpriorityvalue->value)
-                                {{-- hasil perkalian --}}
-                                {{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 2) }}
-                                * {{ round($innerpriorityvalue->value, 2) }} =
-                                {{ round($res, 3) }}
-                                {{-- row total --}}
-                                @php($rowTotal += Str::substr($res, 0, 11))
-                            </td>
-                            @php($startAt++)
-                            @endforeach
-                            @php(array_push($rowTotals, $rowTotal))
-                            <td class="text-center table-dark text-white">
-                                {{-- {{ $rowTotal }} --}}
-                                {{ round($rowTotal, 3) }}
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-
-                {{-- Lambda --}}
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Menentukan maks lamda dan rasio konsistensi</h4>
-                </div>
-
-                <table class="table table-bordered table-responsive">
-                    <thead class="table-primary align-middle">
-                        <tr>
-                            <th scope="col">Kriteria</th>
-                            <th scope="col" class="text-center">Jumlah Baris</th>
-                            <th scope="col" class="text-center">Nilai Prioritas</th>
-                            <th scope="col" class="text-center">Lamda</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php($lambdaMax = null)
-                        @php($lambdaResult = [])
-                        @php($hasil = [])
-                        @foreach ($rowTotals as $key => $total)
-                        <tr>
-                            <td scope="row">
-                                {{ $criteria_analysis->priorityValues[$key]->criteria->name }}
-                            </td>
-                            {{-- jumlah baris --}}
-                            <td class="text-center">
-                                {{ round($total, 2) }}
-                            </td>
-                            {{-- nilai prioritas --}}
-                            <td class="text-center">
-                                {{ round($criteria_analysis->priorityValues[$key]->value, 3) }}
-                            </td>
-                            {{-- lamda --}}
-                            <td class="text-center">
-                                @php($lambda = $total / $criteria_analysis->priorityValues[$key]->value)
-                                @php($res = substr($lambda, 0, 11))
-                                @php(array_push($lambdaResult, $res))
-                                {{ round($total, 2) }} /
-                                {{ round($criteria_analysis->priorityValues[$key]->value, 2) }} =
-                                {{ round($res, 2) }}
-                            </td>
-                        </tr>
-                        @endforeach
-                        <tr class="align-middle">
-                            <td class="text-center"></td>
-                            <td class="text-center"></td>
-                            <td class="text-center fw-bold table-dark">Maks Lamda</td>
-                            <td class="text-center fw-bold table-dark">
-                                {{ round(array_sum($lambdaResult), 3) }} /
-                                {{ count($lambdaResult) }}
-                                =
-                                @php($lambdaMax = array_sum($lambdaResult) / count($lambdaResult))
-                                {{ round($lambdaMax, 3) }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                {{-- Final Result --}}
-                <div class="d-lg-flex justify-content-center">
-                    <div class="col-12 col-lg-6">
-                        <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <th scope="row">Banyak Kriteria</th>
-                                    <td>{{ $criteria_analysis->priorityValues->count() }}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Maks Lamda</th>
-                                    <td>{{ round($lambdaMax, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Indeks Konsistensi</th>
+                            <tr>
+                                <th class="table-light">{{ $priorityValue->criteria->name }}</th>
+                                @foreach ($criteria_analysis->priorityValues as $innerPriorityValue)
                                     <td>
-                                        @php($CI = ($lambdaMax - count($lambdaResult)) / (count($lambdaResult) - 1))
-
-                                        {{ round($lambdaMax, 3) }} - {{ count($lambdaResult) }}
-                                        /
-                                        {{ count($lambdaResult) }} - 1
-                                        =
-                                        {{ round($CI, 3) }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Konsistensi Random</th>
-                                    <td>
-                                        @php($RC = $ruleRC[$criteria_analysis->priorityValues->count()])
-
-                                        {{ $RC }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Rasio Konsistensi</th>
-                                    {{-- @php($CR = $CI / $RC) --}}
-                                    @php($CR = $RC != 0.0 ? $CI / $RC : 0.0)
-                                    @php($txtClass = 'text-danger fw-bold')
-                                    @if ($CR <= 0.1)
-                                        @php($txtClass='text-success fw-bold' )
+                                        @if ($criteria_analysis->details[$startAt]->criteria_id_first !== $criteria_analysis->details[$startAt]->criteria_id_second && $criteria_analysis->details[$startAt]->comparison_result < 1)
+                                            <span class="text-muted small">1 / {{ round($criteria_analysis->details[$startAt]->comparison_value, 2) }} = </span>
                                         @endif
-                                        <td class="{{ $txtClass }}">
-                                        {{ round($CI, 3) }} / {{ round($RC, 3) }} =
-                                        {{ round($CR, 3) }}
-                                        {{-- {{ $CR }} --}}
-                                        </td>
-                                </tr>
-                                <tr>
-                                    @if ($CR > 0.1)
-                                    <td class="text-center text-danger" colspan="2">
-                                        Nilai Rasio Konsistensi melebihi <b>0.1</b> <br>
-                                        Masukkan kembali nilai perbandingan kriteria
-                                        <a href="{{ route('perbandingan.update', $criteria_analysis->id) }}"
-                                            class="btn btn-danger mt-2">Masukkan kembali Nilai Perbandingan</a>
+                                        {{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 3) }}
                                     </td>
-                                    @elseif(!$isAbleToRank)
-                                    <td class="text-center text-danger" colspan="2">
-                                        Operator belum memasukkan alternatif apapun <br>
-                                        Harap menunggu operator untuk menginputkan alternatif sebelum melihat
-                                        peringkat
-                                    </td>
-                                    @else
-                                    <th scope="row">Hasil</th>
+                                    @php($startAt++)
+                                @endforeach
+                            </tr>
+                        @endforeach
+                        <tr class="table-dark">
+                            <th class="text-center">Jumlah</th>
+                            @foreach ($totalSums as $total)
+                                <th class="text-center">{{ round($total['totalSum'], 3) }}</th>
+                            @endforeach
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">2. Matriks Normalisasi dan Nilai Prioritas</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        {{-- Konten tabel ini sudah benar --}}
+                        <thead class="table-light align-middle text-center">
+                        <tr>
+                            <th>Kriteria</th>
+                            @foreach ($criteria_analysis->priorityValues as $priorityValue)
+                                <th>{{ $priorityValue->criteria->name }}</th>
+                            @endforeach
+                            <th>Jumlah Baris</th>
+                            <th class="table-dark">Nilai Prioritas</th>
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        @php($startAt = 0)
+                        @foreach ($criteria_analysis->priorityValues as $priorityValue)
+                            @php($rowTotal = 0)
+                            <tr>
+                                <th class="table-light">{{ $priorityValue->criteria->name }}</th>
+                                @foreach ($criteria_analysis->priorityValues as $key => $innerPriorityValue)
+                                    @php($res = floatval($criteria_analysis->details[$startAt]->comparison_result) / $totalSums[$key]['totalSum'])
                                     <td>
-                                        <a href="{{ route('rank.index', $criteria_analysis->id) }}"
-                                            class="btn btn-success">
-                                            Lihat Perangkingan
-                                        </a>
+                                        <span class="text-muted small">{{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 2) }} / {{ round($totalSums[$key]['totalSum'], 2) }}</span><br>
+                                        = <b class="text-success">{{ round($res, 3) }}</b>
                                     </td>
-                                    @endif
-                                </tr>
-                            </tbody>
-                        </table>
+                                    @php($rowTotal += $res)
+                                    @php($startAt++)
+                                @endforeach
+                                <td>{{ round($rowTotal, 3) }}</td>
+                                <td class="table-dark">
+                                    <span class="text-white-50 small">{{ round($rowTotal, 2) }} / {{ $criteria_analysis->priorityValues->count() }}</span><br>
+                                    = <b class="text-white">{{ round($priorityValue->value, 3) }}</b>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">3. Matriks Perkalian dengan Nilai Prioritas</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        <thead class="table-light align-middle text-center">
+                        <tr>
+                            <th>Kriteria</th>
+                            @foreach ($criteria_analysis->priorityValues as $priorityValue)
+                                <th>{{ $priorityValue->criteria->name }}</th>
+                            @endforeach
+                            <th class="table-dark">Jumlah per Baris</th>
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        @php($startAt = 0)
+                        {{-- PERBAIKAN: Inisialisasi variabel $rowTotals --}}
+                        @php($rowTotals = [])
+                        @foreach ($criteria_analysis->priorityValues as $priorityValue)
+                            @php($rowTotal = 0)
+                            <tr>
+                                <th class="table-light">{{ $priorityValue->criteria->name }}</th>
+                                @foreach ($criteria_analysis->priorityValues as $key => $innerpriorityvalue)
+                                    @php($res = floatval($criteria_analysis->details[$startAt]->comparison_result) * $innerpriorityvalue->value)
+                                    <td>
+                                        <span class="text-muted small">{{ round(floatval($criteria_analysis->details[$startAt]->comparison_result), 2) }} * {{ round($innerpriorityvalue->value, 2) }}</span><br>
+                                        = <b class="text-success">{{ round($res, 3) }}</b>
+                                    </td>
+                                    @php($rowTotal += $res)
+                                    @php($startAt++)
+                                @endforeach
+                                {{-- PERBAIKAN: Menyimpan hasil ke dalam array $rowTotals --}}
+                                @php(array_push($rowTotals, $rowTotal))
+                                <td class="table-dark fw-bold">{{ round($rowTotal, 3) }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">4. Penentuan Lambda Maks dan Rasio Konsistensi</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        <thead class="table-light align-middle text-center">
+                        <tr>
+                            <th>Kriteria</th>
+                            <th>Jumlah Baris</th>
+                            <th>Nilai Prioritas</th>
+                            <th>Hasil (Jumlah / Prioritas)</th>
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        @php($lambdaResult = [])
+                        {{-- PERBAIKAN: Menggunakan $rowTotals yang sudah dihitung di atas --}}
+                        @foreach ($rowTotals as $key => $total)
+                            <tr>
+                                <th class="table-light">{{ $criteria_analysis->priorityValues[$key]->criteria->name }}</th>
+                                <td>{{ round($total, 3) }}</td>
+                                <td>{{ round($criteria_analysis->priorityValues[$key]->value, 3) }}</td>
+                                <td>
+                                    @php($lambda = $total / $criteria_analysis->priorityValues[$key]->value)
+                                    @php(array_push($lambdaResult, $lambda))
+                                    <span class="text-muted small">{{ round($total, 2) }} / {{ round($criteria_analysis->priorityValues[$key]->value, 2) }}</span><br>
+                                    = <b class="text-success">{{ round($lambda, 3) }}</b>
+                                </td>
+                            </tr>
+                        @endforeach
+                        <tr class="table-dark">
+                            <td colspan="3" class="text-end fw-bold">Lambda Maks (λ maks) = Rata-rata Hasil</td>
+                            <td class="fw-bold">
+                                @php($lambdaMax = count($lambdaResult) > 0 ? array_sum($lambdaResult) / count($lambdaResult) : 0)
+                                <span class="text-white-50 small">Σ / n</span><br>
+                                = {{ round($lambdaMax, 3) }}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-lg-flex justify-content-center">
+                    <div class="col-12 col-lg-8">
+                        <div class="card">
+                            <div class="card-header fw-bold text-center">
+                                Hasil Akhir Rasio Konsistensi
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                    @php($n = $criteria_analysis->priorityValues->count())
+                                    @php($CI = ($n > 1) ? ($lambdaMax - $n) / ($n - 1) : 0)
+                                    @php($ruleRC = [1 => 0.0, 2 => 0.0, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.24, 7 => 1.32, 8 => 1.41, 9 => 1.45, 10 => 1.49, 11 => 1.51, 12 => 1.48, 13 => 1.56, 14 => 1.57, 15 => 1.59])
+                                    @php($RC = $ruleRC[$n] ?? 0)
+                                    @php($CR = ($RC > 0) ? $CI / $RC : 0)
+
+                                    <tr>
+                                        <th class="table-light w-50">Lambda Maks (λ maks)</th>
+                                        <td>{{ round($lambdaMax, 3) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-light">Indeks Konsistensi (CI)</th>
+                                        <td>{{ round($CI, 3) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-light">Indeks Random (RI)</th>
+                                        <td>{{ $RC }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-light">Rasio Konsistensi (CR)</th>
+                                        @php($txtClass = $CR <= 0.1 ? 'text-success fw-bold' : 'text-danger fw-bold')
+                                        <td class="{{ $txtClass }}">
+                                            {{ round($CR, 3) }}
+                                            @if ($CR <= 0.1)
+                                                <span class="badge bg-success ms-2">Konsisten</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">Tidak Konsisten</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </main>
+    @include('partials.style-script')
 @endsection

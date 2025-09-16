@@ -68,3 +68,21 @@ $(function () {
     form.addClass("was-validated");
   });
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+
+    if (togglePassword && password) {
+        const eyeIcon = togglePassword.querySelector('i');
+        togglePassword.addEventListener('click', function() {
+            // Ganti tipe input dari password ke text atau sebaliknya
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+
+            // Ganti ikon mata
+            eyeIcon.classList.toggle('bi-eye');
+            eyeIcon.classList.toggle('bi-eye-slash');
+        });
+    }
+});

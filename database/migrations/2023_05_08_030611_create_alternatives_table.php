@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('criteria_id')->constrained()->cascadeOnDelete();
             $table->foreignId('criteria_sub_id')->constrained()->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('kelas_id')->constrained()->cascadeOnDelete();
             $table->decimal('alternative_value', 10, 1);
             $table->timestamps();
         });

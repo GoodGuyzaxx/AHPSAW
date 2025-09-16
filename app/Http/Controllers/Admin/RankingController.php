@@ -242,7 +242,6 @@ class RankingController extends Controller
             $normalisasi[] = [
                 'student_id'      => $alternative['student_id'],
                 'student_name'    => strtoupper($alternative['student_name']),
-                'kelas_name'      => $alternative['kelas_name'],
                 'criteria_name'   => $alternative['criteria_name'],
                 'criteria_id'     => $alternative['criteria_id'],
                 'alternative_val' => $alternative['alternative_val'],
@@ -251,16 +250,16 @@ class RankingController extends Controller
         }
 
         // Sorting the normalisasi array
-        usort($normalisasi, function ($a, $b) {
-            $cmp = strcmp($a['kelas_name'], $b['kelas_name']);
-            if ($cmp === 0) {
-                $cmp = strcmp($a['student_name'], $b['student_name']);
-                if ($cmp === 0) {
-                    return $a['criteria_id'] - $b['criteria_id'];
-                }
-            }
-            return $cmp;
-        });
+//        usort($normalisasi, function ($a, $b) {
+//            $cmp = strcmp($a['kelas_name'], $b['kelas_name']);
+//            if ($cmp === 0) {
+//                $cmp = strcmp($a['student_name'], $b['student_name']);
+//                if ($cmp === 0) {
+//                    return $a['criteria_id'] - $b['criteria_id'];
+//                }
+//            }
+//            return $cmp;
+//        });
 
         return $normalisasi;
     }

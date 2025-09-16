@@ -1,164 +1,140 @@
 @extends('layouts.admin')
 
 @section('content')
-{{-- {{ print_r($ranking) }} --}}
-<div class="container-fluid px-4">
-    <div class="row align-items-center">
-        <div class="col-sm-6 col-md-8">
-            <h1 class="mt-4">{{ $title }}</h1>
-            <ol class="breadcrumb mb-4">
-                <li class="breadcrumb-item"><a href="{{ route('rank.show', $criteriaAnalysis->id) }}">Normalisasi
-                        Tabel</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('rank.final', $criteriaAnalysis->id) }}">Student Rank</a>
-                </li>
-                <li class="breadcrumb-item active">{{ $title }}</li>
-            </ol>
+    <main class="container-fluid px-4 animate-fade-in">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ $title }}</h1>
+                <p class="mb-0 text-muted">Detail perhitungan normalisasi dan perangkingan metode SAW.</p>
+            </div>
         </div>
-    </div>
 
-    {{-- datatable --}}
-    <div class="card mb-4">
-        <div class="card-body table-responsive">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('rank.index') }}" class="text-decoration-none">Analisis & Perangkingan</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('rank.show', $criteriaAnalysis->id) }}">Normalisasi Matriks</a></li>
+                <li class="breadcrumb-item active fw-semibold">{{ $title }}</li>
+            </ol>
+        </nav>
 
-            <div class="d-sm-flex align-items-center">
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Normalisasi Alternatif Siswa</h4>
-                    <a href="{{route('export.saw',$criteriaAnalysis->id)}}" class="btn btn-primary">Export to Excel</a>
+        <div class="card border-0 shadow-sm animate-fade-in" style="animation-delay: 0.1s">
+            <div class="card-header bg-light border-0 py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-calculator me-2 text-info"></i>
+                        Detail Perhitungan Peringkat
+                    </h5>
+                    <a href="{{ route('export.saw', $criteriaAnalysis->id) }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel me-2"></i>Export ke Excel
+                    </a>
                 </div>
             </div>
 
-
-            <table class="table table-bordered table-condensed table-responsive">
-                <tbody>
-                    <tr>
-                        <td scope="col" class="fw-bold" style="width:11%">Kategori</td>
-                        @foreach ($dividers as $divider)
-                        <td scope="col">{{ $divider['kategori'] }}</td>
-                        @endforeach
-                    </tr>
-                    <tr>
-                        <td scope="col" class="fw-bold" style="width:11%">Nilai pembagi</td>
-                        @foreach ($dividers as $divider)
-                        <td scope="col">{{ $divider['divider_value'] }}</td>
-                        @endforeach
-                    </tr>
-                    <tr>
-                        <td scope="col" class="fw-bold" style="width:11%">Nilai prioritas</td>
-                        @foreach ($criteriaAnalysis->priorityValues as $key => $innerpriorityvalue)
-                        <td>
-                            {{ round($innerpriorityvalue->value, 3) }}
-                        </td>
-                        @endforeach
-                    </tr>
-                </tbody>
-            </table>
-
-            <table id="datatablesSimple2" class="table table-bordered">
-                <thead class="table-primary align-middle text-center">
-                    <tr>
-                        <th scope="col" class="text-center">No</th>
-                        <th scope="col" class="text-center">Nama alternatif</th>
-                        <th scope="col" class="text-center">Kelas</th>
-                        @foreach ($dividers as $divider)
-                        <th scope="col">{{ $divider['name'] }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody class="align-middle">
-                    @if (!empty($normalizations))
-                    @foreach ($normalizations as $normalisasi)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td class="text-center">
-                            {{ $normalisasi['student_name'] }}
-                        </td>
-                        <td class="text-center">
-                            {{ $normalisasi['kelas_name'] }}
-                        </td>
-
-                        @foreach ($dividers as $key => $divider)
-                        @php
-                        $val = isset($normalisasi['alternative_val'][$key]) ? $normalisasi['alternative_val'][$key] : null;
-                        $result = isset($normalisasi['results'][$key]) ? round($normalisasi['results'][$key], 2) : null;
-                        @endphp
-                        <td class="text-center">
-                            @if ($result !== null)
-                            @if ($divider['kategori'] === 'BENEFIT' && $val != 0)
-                            {{ $val }} / {{ $divider['divider_value'] }} =
-                            @elseif ($divider['kategori'] === 'COST' && $val != 0)
-                            {{ $divider['divider_value'] }} / {{ $val }} =
-                            @endif
-                            {{ $result }}
-                            @else
-                            Empty
-                            @endif
-                        </td>
-                        @endforeach
-                    </tr>
-                    @endforeach
-                    @endif
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- datatable --}}
-    <div class="card">
-        <div class="card-body">
-            <table id="datatablesSimple" class="table table-bordered table-responsive">
-                <div class="mb-4">
-                    <h4 class="mb-0 text-gray-800">Rangking Siswa</h4>
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Informasi Pembagi & Bobot</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th class="table-light w-25">Kategori</th>
+                            @foreach ($dividers as $divider)
+                                <td class="text-center">{{ $divider['kategori'] }}</td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <th class="table-light">Nilai Pembagi (Max/Min)</th>
+                            @foreach ($dividers as $divider)
+                                <td class="text-center">{{ $divider['divider_value'] }}</td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            <th class="table-light">Bobot Prioritas (W)</th>
+                            @foreach ($criteriaAnalysis->priorityValues as $key => $innerpriorityvalue)
+                                <td class="text-center fw-bold">{{ round($innerpriorityvalue->value, 3) }}</td>
+                            @endforeach
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <thead class="table-primary">
-                    <tr>
-                        <th scope="col">Nama alternatif</th>
-                        <th scope="col">Kelas</th>
-                        @foreach ($dividers as $divider)
-                        <th scope="col">
-                            Hitung {{ $divider['name'] }}
-                        </th>
-                        @endforeach
-                        <th scope="col" class="text-center">Hasil perhitungan</th>
-                        <th scope="col" class="text-center">Rank</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!empty($ranking))
-                    @php($rankResult = [])
-                    @php($hasilKali = [])
-                    @foreach ($ranking as $rank)
-                    <tr>
-                        <td>
-                            {{ $rank['student_name'] }}
-                        </td>
-                        <td>
-                            {{ $rank['kelas_name'] }}
-                        </td>
-                        @foreach ($criteriaAnalysis->priorityValues as $key => $innerpriorityvalue)
-                        @php($hasilNormalisasi = isset($rank['results'][$key]) ? $rank['results'][$key] : 0)
-                        <td class="text-center">
-                            @php($kali = $innerpriorityvalue->value * $hasilNormalisasi)
-                            @php($res = substr($kali, 0, 11))
-                            @php(array_push($hasilKali, $res))
-                            ({{ round($innerpriorityvalue->value, 3) }} *
-                            {{ round($hasilNormalisasi, 3) }})
-                            =
-                            {{ round($res, 3) }}
-                        </td>
-                        @endforeach
 
-                        <td class="text-center">
-                            {{ round($rank['rank_result'], 4) }}
-                        </td>
-                        <td class="text-center fw-bold">
-                            {{ $loop->iteration }}
-                        </td>
-                    </tr>
-                    @endforeach
-                    @endif
-                </tbody>
-            </table>
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">2. Proses Normalisasi Matriks (R)</h6>
+                <div class="table-responsive mb-5">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light align-middle text-center">
+                        <tr>
+                            <th>Nama Alternatif</th>
+                            @foreach ($dividers as $divider)
+                                <th>{{ $divider['name'] }}</th>
+                            @endforeach
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        @if (!empty($normalizations))
+                            @foreach ($normalizations as $normalisasi)
+                                <tr>
+                                    <th class="table-light text-start">{{ $normalisasi['student_name'] }}</th>
+                                    @foreach ($dividers as $key => $divider)
+                                        <td>
+                                            @php
+                                                $val = $normalisasi['alternative_val'][$key] ?? null;
+                                                $result = $normalisasi['results'][$key] ?? null;
+                                            @endphp
+                                            @if ($result !== null)
+                                                @if ($divider['kategori'] === 'BENEFIT' && $val != 0)
+                                                    <span class="text-muted small">{{ $val }} / {{ $divider['divider_value'] }}</span><br>=
+                                                @elseif ($divider['kategori'] === 'COST' && $val != 0)
+                                                    <span class="text-muted small">{{ $divider['divider_value'] }} / {{ $val }}</span><br>=
+                                                @endif
+                                                <b class="text-success">{{ round($result, 3) }}</b>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        @endif
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">3. Proses Perhitungan Peringkat (V = R x W)</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light align-middle text-center">
+                        <tr>
+                            <th>Nama Alternatif</th>
+                            @foreach ($dividers as $divider)
+                                <th>Hitung {{ $divider['name'] }}</th>
+                            @endforeach
+                            <th class="table-dark">Hasil Akhir (V)</th>
+                            <th class="table-dark">Peringkat</th>
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle text-center">
+                        @if (!empty($ranking))
+                            @foreach ($ranking as $rank)
+                                <tr>
+                                    <th class="table-light text-start">{{ $rank['student_name'] }}</th>
+                                    @foreach ($criteriaAnalysis->priorityValues as $key => $innerpriorityvalue)
+                                        @php($hasilNormalisasi = $rank['results'][$key] ?? 0)
+                                        @php($kali = $innerpriorityvalue->value * $hasilNormalisasi)
+                                        <td>
+                                            <span class="text-muted small">({{ round($hasilNormalisasi, 3) }} x {{ round($innerpriorityvalue->value, 3) }})</span><br>
+                                            = <b class="text-info">{{ round($kali, 3) }}</b>
+                                        </td>
+                                    @endforeach
+                                    <td class="table-secondary fw-bold">{{ round($rank['rank_result'], 4) }}</td>
+                                    <td class="table-dark fw-bold">{{ $loop->iteration }}</td>
+                                </tr>
+                            @endforeach
+                        @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+    </main>
+    @include('partials.style-script')
 @endsection

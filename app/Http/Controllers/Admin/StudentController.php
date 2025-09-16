@@ -24,39 +24,62 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        // mengurutkan
-        $students = Student::orderby('kelas_id')
-            ->orderby('name');
+        // Opsi untuk dropdown jumlah entri per halaman
+        $perPageOptions = [5, 10, 15, 20, 25];
+        $perPage = $request->query('perPage', $perPageOptions[1]); // Default 10 entri
 
+        // Memulai Query Builder, bukan mengambil semua data
+        $query = Student::query();
 
-        if (request('search')) {
-            $students->join('kelas', 'kelas.id', '=', 'students.kelas_id')
-                ->where('students.name', 'LIKE', '%' . request('search') . '%')
-                ->orWhere('students.nis', 'LIKE', '%' . request('search') . '%')
-                ->orWhere('students.gender', 'LIKE', '%' . request('search') . '%')
-                ->orWhere('kelas.kelas_name', 'LIKE', '%' . request('search') . '%')
-                ->get();
+        // Menerapkan filter pencarian jika ada input 'search'
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = '%' . $request->search . '%';
+            // Mencari berdasarkan nama ATAU npm
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                    ->orWhere('npm', 'like', $searchTerm);
+            });
         }
 
-        // Get value halaman yang dipilih dari dropdown
-        $page = $request->query('page', 1);
+        // Mengurutkan data, misalnya dari yang terbaru
+        $query->latest(); // Ini adalah singkatan dari orderBy('created_at', 'DESC')
 
-        // Tetapkan opsi dropdown halaman yang diinginkan
-        $perPageOptions = [5, 10, 15, 20, 25];
+        // Sekarang, lakukan paginasi pada query yang sudah difilter dan diurutkan
+        // withQueryString() penting agar filter tetap ada saat berpindah halaman
+        $students = $query->paginate($perPage)->withQueryString();
 
-        // Get value halaman yang dipilih menggunaakan the query parameters
-        $perPage = $request->query('perPage', $perPageOptions[1]);
-
-        // Paginasi hasil dengan halaman dan dropdown yang dipilih
-        $students = $students->paginate($perPage, $this->fields, 'page', $page);
-
+        // Mengirim data ke view
         return view('pages.admin.student.data', [
-            'title'           => 'Data Siswa',
+            'title'           => 'Data Mahasiswa',
             'students'        => $students,
             'perPageOptions'  => $perPageOptions,
             'perPage'         => $perPage
         ]);
     }
+//    public function index(Request $request)
+//    {
+//        // mengurutkan
+//        $students = Student::all();
+//
+//        // Get value halaman yang dipilih dari dropdown
+//        $page = $request->query('page', 1);
+//
+//        // Tetapkan opsi dropdown halaman yang diinginkan
+//        $perPageOptions = [5, 10, 15, 20, 25];
+//
+//        // Get value halaman yang dipilih menggunaakan the query parameters
+//        $perPage = $request->query('perPage', $perPageOptions[1]);
+//
+//        // Paginasi hasil dengan halaman dan dropdown yang dipilih
+//        $students = $students->paginate($perPage, $this->fields, 'page', $page);
+//
+//        return view('pages.admin.student.data', [
+//            'title'           => 'Data Mahasiswa',
+//            'students'        => $students,
+//            'perPageOptions'  => $perPageOptions,
+//            'perPage'         => $perPage
+//        ]);
+//    }
 
     /**
      * Show the form for creating a new resource.

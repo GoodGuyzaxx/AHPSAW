@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',  [PortalController::class, 'index'])->name('portal.index');
+Route::get("/", [PortalController::class, 'index'])->name("portal.index");
 
 Route::get('/login',  [LoginController::class, 'index'])->middleware('guest')->name('login.index');
 Route::post('/login',  [LoginController::class, 'authenticate']);

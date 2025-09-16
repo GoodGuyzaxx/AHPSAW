@@ -1,245 +1,194 @@
 @extends('layouts.admin')
 
 @section('content')
-    {{-- {{ print_r($alternatives) }} --}}
-    <div class="container-fluid px-4">
-        <div class="row align-items-center">
-            <div class="col-sm-6 col-md-8">
-                <h1 class="mt-4">{{ $title }}</h1>
-                <ol class="breadcrumb mb-4">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">{{ $title }}</li>
-                </ol>
+    <main class="container-fluid px-4 animate-fade-in">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ $title }}</h1>
+                <p class="mb-0 text-muted">Kelola data alternatif dan nilai kriteria untuk setiap mahasiswa.</p>
             </div>
         </div>
 
-        {{-- datatable --}}
-        <div class="card mb-4">
-            <div class="card-body table-responsive">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('dashboard.index') }}" class="text-decoration-none">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active fw-semibold">{{ $title }}</li>
+            </ol>
+        </nav>
 
-                <div class="d-sm-flex align-items-center">
+        <div class="card border-0 shadow-sm animate-fade-in" style="animation-delay: 0.1s">
+            <div class="card-header bg-light border-0 py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-users me-2 text-primary"></i>
+                        Daftar Alternatif Mahasiswa
+                    </h5>
                     @can('admin')
-                        <button type="button" class="btn btn-primary mb-3 me-auto" data-bs-toggle="modal"
-                            data-bs-target="#addAlternativeModal">
-                            <i class="fas fa-plus me-1"></i>
-                            Alternatif
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAlternativeModal">
+                            <i class="fas fa-plus me-2"></i>Tambah Alternatif
                         </button>
                     @endcan
                 </div>
+            </div>
 
-                {{-- error handle --}}
+            <div class="card-body p-4">
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
-
-                {{-- file request --}}
                 @if ($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        @foreach ($errors->all() as $error)
-                            {{ $error }}
-                        @endforeach
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @foreach ($errors->all() as $error)<span>{{ $error }}</span>@endforeach
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
-                <div class="d-sm-flex align-items-center justify-content-between">
-                    <div class="d-sm-flex align-items-center mb-3">
-                        <select class="form-select me-3" id="perPage" name="perPage" onchange="submitForm()">
-                            @foreach ($perPageOptions as $option)
-                                <option value="{{ $option }}" {{ $option == $perPage ? 'selected' : '' }}>
-                                    {{ $option }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <label class="form-label col-lg-7 col-sm-7 col-md-7" for="perPage">entries per page</label>
-                    </div>
-
-                    <form action="{{ route('alternatif.index') }}" method="GET" class="ms-auto float-end">
-                        <div class="input-group mb-3">
-                            <input type="text" name="search" id="myInput" class="form-control" placeholder="Search..."
-                                value="{{ request('search') }}">
-                            <button class="btn btn-primary" type="submit">Search</button>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <select class="form-select form-select-sm me-2" id="perPage" onchange="submitForm()">
+                                @foreach ($perPageOptions as $option)
+                                    <option value="{{ $option }}" {{ $option == $perPage ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
+                            <label class="form-label mb-0 text-muted small">entri per halaman</label>
                         </div>
-                    </form>
+                    </div>
+                    <div class="col-md-9">
+                        <form action="{{ route('alternatif.index') }}" method="GET">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Cari berdasarkan nama mahasiswa..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
-
-                <table class="table table-bordered table-responsive">
-                    <thead class="table-primary align-middle">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light text-center">
                         <tr>
-                            <th rowspan="2">No</th>
-                            <th rowspan="2">Nama Alternatif</th>
-                            <th class="text-center" rowspan="2">Kelas</th>
-                            <th class="text-center" colspan="{{ $criterias->count() }}">Kriteria</th>
+                            <th rowspan="2" class="align-middle">No</th>
+                            <th rowspan="2" class="align-middle">Nama Alternatif</th>
+                            <th colspan="{{ $criterias->count() }}">Kriteria</th>
                             @can('admin')
-                                <th class="text-center" rowspan="2">Aksi</th>
+                                <th rowspan="2" class="align-middle">Aksi</th>
                             @endcan
                         </tr>
                         <tr>
-                            @if ($criterias->count())
-                                @foreach ($criterias as $criteria)
-                                    <th class="text-center">{{ $criteria->name }}</th>
-                                @endforeach
-                            @else
-                                <th class="text-center">No Criteria Data Found</th>
-                            @endif
+                            @forelse ($criterias as $criteria)
+                                <th>{{ $criteria->name }}</th>
+                            @empty
+                                <th>Tidak Ada Kriteria</th>
+                            @endforelse
                         </tr>
-                    </thead>
-                    <tbody class="align-middle" id="myTable">
-                        @if ($alternatives->count())
-                            @foreach ($alternatives as $alternative)
-                                <tr>
-                                    {{-- <th>{{ $loop->iteration }}</th> --}}
-                                    <td scope="row" class="text-center">
-                                        {{ ($alternatives->currentpage() - 1) * $alternatives->perpage() + $loop->index + 1 }}
-                                    </td>
-                                    <td>
-                                        {{ Str::ucfirst(Str::upper($alternative->name)) }}
-                                    </td>
-                                    <td class="text-center">
-                                        {{ $alternative->kelas->kelas_name }}
-                                    </td>
-                                    @foreach ($criterias as $criteria)
-                                        @php
-                                            $subCriteria = $alternative->alternatives->where('criteria_id', $criteria->id)->first();
-                                        @endphp
-                                        @if ($subCriteria)
-                                            <td class="text-center">
-                                                {{ $subCriteria->criteriaSub->name_sub ?? 'Empty' }} <!-- Menampilkan nama sub kriteria -->
-                                            </td>
-                                        @else
-                                            <td class="text-center">
-                                                Empty
-                                            </td>
-                                        @endif
-                                    @endforeach
-                                    @can('admin')
-                                        <td class="text-center">
-                                            <a href="{{ route('alternatif.edit', $alternative->id) }}"
-                                                class="badge bg-warning"><i class="fa-solid fa-pen-to-square"></i></a>
-                                            <form action="{{ route('alternatif.destroy', $alternative->id) }}" method="POST"
-                                                class="d-inline">
-                                                @method('delete')
-                                                @csrf
-                                                <button class="badge bg-danger border-0 btnDelete" data-object="alternatif">
-                                                    <i class="fa-solid fa-trash-can"></i></button>
-                                            </form>
-                                        </td>
-                                    @endcan
-                                </tr>
-                            @endforeach
-                        @else
+                        </thead>
+                        <tbody>
+                        @forelse ($alternatives as $alternative)
                             <tr>
-                                <td colspan="{{ 5 + $criterias->count() }}" class="text-center text-danger">
-                                    Belum ada data
+                                <td class="text-center">{{ ($alternatives->currentPage() - 1) * $alternatives->perPage() + $loop->iteration }}</td>
+                                <td>{{ $alternative->name }}</td>
+                                @foreach ($criterias as $criteria)
+                                    @php
+                                        $subCriteria = $alternative->alternatives->where('criteria_id', $criteria->id)->first();
+                                    @endphp
+                                    <td class="text-center">{{ $subCriteria->criteriaSub->name_sub ?? 'N/A' }}</td>
+                                @endforeach
+                                @can('admin')
+                                    <td class="text-center">
+                                        <a href="{{ route('alternatif.edit', $alternative->id) }}" class="btn btn-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('alternatif.destroy', $alternative->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                            @method('delete')
+                                            @csrf
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                                        </form>
+                                    </td>
+                                @endcan
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ 3 + $criterias->count() }}" class="text-center text-danger py-4">
+                                    <i class="fas fa-exclamation-circle me-2"></i>Data tidak ditemukan.
                                 </td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
-                {{ $alternatives->appends(request()->query())->links() }}
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    {{ $alternatives->appends(request()->query())->links() }}
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- Add Alternative -->
-    <div class="modal fade" id="addAlternativeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="addAlternativeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addAlternativeModalLabel">Tambah Alternatif</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ route('alternatif.index') }}" method="post">
-                    <div class="modal-body">
-                        {{-- @dd($student->kelas_id) --}}
-                        @csrf
-                        {{-- Pilih Student --}}
-                        <div class="my-2">
-                            <label for="student_id" class="form-label">Daftar Siswa</label>
-                            <select class="form-select @error('student_id') 'is-invalid' : ''  @enderror" id="student_id"
-                                name="student_id" required>
-                                <option disabled selected value="">--Pilih Siswa--</option>
-                                @if ($student_list->count())
-                                    @foreach ($student_list as $kelas => $students)
-                                        <optgroup label="Kelas {{ $kelas }}: {{ $students->count() }}">
-                                            @foreach ($students as $student)
-                                                <option value="{{ $student->id }} {{ $student->kelasId }}">
-                                                    {{ $student->name }} - {{ $student->kelas->kelas_name }}
-                                                </option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                @else
-                                    <option disabled selected>--NO DATA FOUND--</option>
-                                @endif
+    <div class="modal fade" id="addAlternativeModal" tabindex="-1" aria-labelledby="addAlternativeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ route('alternatif.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-gradient-info text-white border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-shape bg-white bg-opacity-20 rounded-circle p-2 me-3">
+                                <i class="fas fa-plus-circle text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold" id="addAlternativeModalLabel">Tambah Alternatif Baru</h5>
+                                <small class="opacity-75">Isi data mahasiswa dan nilai kriterianya</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <div class="mb-4">
+                            <label for="student_id" class="form-label fw-semibold"><i class="fas fa-user-graduate me-2 text-primary"></i>Pilih Mahasiswa</label>
+                            <select class="form-select @error('student_id') is-invalid @enderror" id="student_id" name="student_id" required>
+                                <option value="" disabled selected>-- Pilih dari daftar mahasiswa yang tersedia --</option>
+                                @forelse ($student_list as $student)
+                                    <option value="{{ $student->id }}">{{ $student->name }}</option>
+                                @empty
+                                    <option disabled>Tidak ada mahasiswa yang bisa ditambahkan</option>
+                                @endforelse
                             </select>
-
-                            @error('student_id')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
+                            @error('student_id')<div class="invalid-feedback mt-1">{{ $message }}</div>@enderror
                         </div>
 
-                        {{-- Masukkan Nilai Kriteria --}}
-                        @if ($criterias->count())
-                            @foreach ($criterias as $key => $criteria)
-                                <input type="hidden" name="criteria_id[]" value="{{ $criteria->id }}">
-                                <div class="my-2">
-                                    <label for="criteria_{{ $criteria->id }}" class="form-label">
-                                        <b> {{ $criteria->name }} </b>
-                                    </label>
-                                    <select id="criteria_{{ $criteria->id }}"
-                                        class="form-select @error('alternative_value') 'is-invalid' : '' @enderror"
-                                        name="criteria_subs[]">
-                                        <option disabled selected value="">--Pilih--</option>
-                                        @foreach ($criteria->criteriaSubs as $sub)
-                                            <option value="{{ $sub->id }}|{{ $sub->value }}">{{ $sub->name_sub }}</option>
-                                        @endforeach
-                                    </select>
+                        <hr class="my-4">
 
-                                    @error('alternative_value')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-                            @endforeach
-                        @endif
-
+                        <h6 class="mb-3 fw-bold"><i class="fas fa-tasks me-2 text-info"></i>Input Nilai Kriteria</h6>
+                        @forelse ($criterias as $criteria)
+                            <input type="hidden" name="criteria_id[]" value="{{ $criteria->id }}">
+                            <div class="mb-3">
+                                <label for="criteria_{{ $criteria->id }}" class="form-label">{{ $criteria->name }}</label>
+                                <select id="criteria_{{ $criteria->id }}" class="form-select @error('criteria_subs') is-invalid @enderror" name="criteria_subs[]" required>
+                                    <option value="" disabled selected>-- Pilih {{ $criteria->name }} --</option>
+                                    @foreach ($criteria->criteriaSubs as $sub)
+                                        <option value="{{ $sub->id }}|{{ $sub->value }}">{{ $sub->name_sub }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @empty
+                            <p class="text-muted text-center">Belum ada data kriteria. Silakan tambahkan kriteria terlebih dahulu.</p>
+                        @endforelse
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="{{ $criterias->count() ? 'submit' : 'button' }}"
-                            class="btn btn-primary">Simpan</button>
+
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Batal</button>
+                        <button type="submit" class="btn btn-primary" {{ $criterias->count() ? '' : 'disabled' }}><i class="fas fa-save me-2"></i>Simpan</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <script>
-        function submitForm() {
-            var perPageSelect = document.getElementById('perPage');
-            var perPageValue = perPageSelect.value;
-
-            var currentPage = {{ $alternatives->currentPage() }};
-            var url = new URL(window.location.href);
-            var params = new URLSearchParams(url.search);
-
-            params.set('perPage', perPageValue);
-
-            if (!params.has('page')) {
-                params.set('page', currentPage);
-            }
-
-            url.search = params.toString();
-            window.location.href = url.toString();
-        }
-    </script>
+    @include('partials.style-script')
 @endsection

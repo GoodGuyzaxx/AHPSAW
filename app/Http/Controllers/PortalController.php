@@ -13,11 +13,6 @@ class PortalController extends Controller
     public function index(Request $request)
     {
 
-        return view('pages.portal', [
-            'students' => Student::count(),
-            'criterias' => Criteria::count(),
-            'kelases' => Kelas::count(),
-            'users' => User::count(),
-        ]);
+        return view('pages.login');
     }
 }
